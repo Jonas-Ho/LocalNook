@@ -23,14 +23,12 @@ export default function DiscoverPage() {
 
   const [places, setPlaces] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
   const [category, setCategory] = useState('all');
   const [showLocationEditor, setShowLocationEditor] = useState(false);
 
   const loadPlaces = async () => {
     if (!searchLocation) return;
     setLoading(true);
-    setFetchError(null);
     try {
       const res = await searchPlaces({
         lat: searchLocation.lat,
@@ -41,7 +39,7 @@ export default function DiscoverPage() {
       });
       setPlaces(res.places);
     } catch (err) {
-      setFetchError(err.message);
+      console.error('Failed to load gems:', err);
       setPlaces([]);
     } finally {
       setLoading(false);
@@ -90,6 +88,13 @@ export default function DiscoverPage() {
       ? `City: ${searchLocation.city}`
       : `Country: ${searchLocation.country}`;
 
+  const locationName =
+    searchLocation.label ||
+    searchLocation.area ||
+    searchLocation.city ||
+    searchLocation.country ||
+    'this location';
+
   return (
     <div className="page discover-page">
       <header className="page-header">
@@ -131,21 +136,13 @@ export default function DiscoverPage() {
 
       {loading ? (
         <LoadingSpinner label="Loading nearby gems..." />
-      ) : fetchError ? (
-        <div className="empty-state error-state">
-          <h2>Could not load gems</h2>
-          <p>{fetchError}</p>
-          <button className="btn primary" onClick={loadPlaces}>
-            Try again
-          </button>
-        </div>
       ) : filtered.length === 0 && places.length === 0 ? (
         <div className="empty-state unknown-state">
           <MapPin size={40} />
-          <h2>We don&apos;t know yet</h2>
+          <h2>No gems near this location yet</h2>
           <p>
-            Nobody&apos;s shared gems in {searchLocation.label || 'this area'} yet.
-            Be the first to add a local spot you love.
+            There aren&apos;t any community recommendations around {locationName} at
+            the moment. Know a great spot? Share it with others.
           </p>
           <Link to="/add" className="btn primary">
             Add a gem
@@ -155,13 +152,16 @@ export default function DiscoverPage() {
             className="btn secondary"
             onClick={clearSearchLocation}
           >
-            Try a different location
+            Search another area
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-state unknown-state">
           <h2>No gems in this category</h2>
-          <p>Try another filter or search a broader area.</p>
+          <p>
+            Nothing matches your filter around {locationName}. Try a different
+            category or broaden your search area.
+          </p>
         </div>
       ) : (
         <>
